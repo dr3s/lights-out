@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8" />
+   
+    
+    <title>Location Demo</title>
+
+
+    
+    <script type='text/javascript' src='http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
+    <script src="bootstrap/js/bootstrap.js" type="text/javascript"></script>
+   	<script src="javascripts/GlobalMapTiles.js"></script>
+    <script src="http://static.firebase.com/v0/firebase.js"></script>
+    
+    <link rel="stylesheet" media="screen" href="bootstrap/css/bootstrap.css">
+    <link rel="shortcut icon" type="image/png" href="images/favicon.png">
+    <link rel="stylesheet" href="stylesheets/main.css">
+    
+</head>
+<body>
+<script type='text/javascript'>
+$(document).ready(function(){
+	var mapRoot = new Firebase('http://gamma.firebase.com/lightsout/map/root');
+	var mercator = new GlobalMercator();
+	   
+	$("#locationInsert").click(function() {
+		var quadtree = mercator.LatLonToQuadTree($("#latitude").val(), $("#longitude").val(), 20);
+		console.log(quadtree);
+		var address = quadtree.split("").join("/");
+		console.log(address);
+		mapRoot.child(address).set({on: $("#on").val()});
+		$("#tile").text(address);
+		$("#tile").change();
+	});
+	
+	
+	$(".location").change(function() {
+		if($("#latitude").val() != null && $("#longitude").val() != null) {
+			var quadtree = mercator.LatLonToQuadTree($("#latitude").val(), $("#longitude").val(), 20);
+			console.log(quadtree);
+			var address = quadtree.split("").join("/");
+			$("#tile").text(address);
+			$("#tile").change();
+			var bounds = mercator.QuadTreeToLatLon(quadtree);
+			console.log(bounds);
+			$("#bounds").text(" " + bounds);
+		}	
+	});
+	
+	
+	$("#tile").change(function() {
+		var address = $("#tile").text();
+		var tile = mapRoot.child(address);
+		tile.on('value', function(snapshot) {
+		  if(snapshot.val() === null) {
+			 $("#on").val("");
+		  } else {
+		    var quadtree = snapshot.val();
+			$("#on").val(quadtree.on);
+		  }
+		});
+	
+	});
+	
+
+	
+	
+		
+});
+</script>     
+    <div id="mainDiv">
+    	<div id="latLonDiv">
+	       	<p><label for="latitude">Enter Latitude</label><input type="text" id="latitude" class="location"/></p>
+	       	<p><label for="longitude">Enter Longitude</label><input type="text" id="longitude" class="location"/></p>
+	       	<p><label for="on">On?</label><input type="boolean" id="on"/><a id="locationInsert">Insert</a></p>
+	       	<p><label for="tile">Tile</label><span id="tile"/></span></p>
+	       	<p><label for="bounds">Bounds</label><span id="bounds"></span></p>
+	       	<p></p>
+       	</div>
+       	
+    </div>
+</body>
+</html>
